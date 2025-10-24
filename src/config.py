@@ -49,21 +49,26 @@ class Config:
     def _validate_config(self):
         """Validate that required configuration is present."""
         errors = []
+        warnings = []
         
-        if not self.discord_bot_token:
-            errors.append("DISCORD_BOT_TOKEN is required")
+        # Discord token is only required for Discord bot
+        # if not self.discord_bot_token:
+        #     warnings.append("DISCORD_BOT_TOKEN not set - Discord bot will not work")
         
         if self.llm_provider == "openai" and not self.openai_api_key:
-            errors.append("OPENAI_API_KEY is required when using OpenAI")
+            warnings.append("OPENAI_API_KEY not set - will run in demo mode")
         
         if self.llm_provider == "anthropic" and not self.anthropic_api_key:
-            errors.append("ANTHROPIC_API_KEY is required when using Anthropic")
+            warnings.append("ANTHROPIC_API_KEY not set - will run in demo mode")
         
-        if self.llm_provider not in ["openai", "anthropic"]:
-            errors.append("LLM_PROVIDER must be either 'openai' or 'anthropic'")
+        if self.llm_provider not in ["openai", "anthropic", "demo"]:
+            errors.append("LLM_PROVIDER must be either 'openai', 'anthropic', or 'demo'")
         
         if errors:
             raise ValueError(f"Configuration errors: {', '.join(errors)}")
+        
+        if warnings:
+            print(f"⚠️  Configuration warnings: {'; '.join(warnings)}")
     
     def is_development(self) -> bool:
         """Check if running in development mode."""

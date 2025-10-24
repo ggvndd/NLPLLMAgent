@@ -1,0 +1,46 @@
+John Doe
+Software Engineer
+john.doe@email.com | (555) 123-4567 | linkedin.com/in/johndoe
+
+PROFESSIONAL EXPERIENCE
+
+Senior Software Engineer | Tech Solutions Inc. | 2021 - Present
+• Developed and maintained web applications using Python, Django, and JavaScript
+• Led a team of 5 developers on a cloud migration project, reducing infrastructure costs by 30%
+• Implemented automated testing procedures that improved code coverage to 95%
+• Collaborated with cross-functional teams to deliver features 25% faster than previous quarters
+
+Software Developer | StartupXYZ | 2019 - 2021
+• Built REST APIs serving 100,000+ daily requests using Python and FastAPI
+• Optimized database queries resulting in 40% performance improvement
+• Participated in agile development practices and code reviews
+• Mentored 2 junior developers on best practices and coding standards
+
+EDUCATION
+
+Bachelor of Science in Computer Science | University of Technology | 2019
+GPA: 3.7/4.0
+Relevant Coursework: Data Structures, Algorithms, Database Systems, Software Engineering
+
+TECHNICAL SKILLS
+
+Languages: Python, JavaScript, Java, SQL, HTML/CSS
+Frameworks: Django, React, FastAPI, Node.js
+Tools & Technologies: Git, Docker, AWS, PostgreSQL, MongoDB, Redis
+Development: REST APIs, Microservices, CI/CD, Test-Driven Development
+
+PROJECTS
+
+E-commerce Platform (2022)
+• Built a scalable e-commerce platform handling 50,000+ daily users
+• Technologies: Python, Django, React, PostgreSQL, AWS
+• Implemented payment processing and inventory management systems
+
+Machine Learning Recommendation System (2021)  
+• Developed a recommendation engine that increased user engagement by 35%
+• Technologies: Python, scikit-learn, pandas, Flask
+• Deployed using Docker containers on AWS ECS
+
+CERTIFICATIONS
+• AWS Certified Developer Associate (2022)
+• Python Institute Certified Associate (2020)
