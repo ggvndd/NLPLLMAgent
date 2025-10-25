@@ -16,6 +16,7 @@ from enum import Enum
 
 from config import Config
 from utils.logger import setup_logger
+from ollama_client import OllamaClient
 
 
 class AnalysisType(Enum):
@@ -90,6 +91,7 @@ class CareerAgent:
         """Initialize the career agent with configuration."""
         self.config = config
         self.logger = setup_logger(__name__, config.log_level)
+        self.ollama_client = None  # Initialize before _initialize_llm_client
         self.llm_client = self._initialize_llm_client()
         
         # Knowledge base for career guidance
@@ -104,6 +106,13 @@ class CareerAgent:
             if self.config.llm_provider == "demo":
                 # Return None for demo mode - we'll use demo responses
                 return None
+            elif self.config.llm_provider == "ollama":
+                # Initialize Ollama client for local LLM
+                self.ollama_client = OllamaClient(
+                    base_url=self.config.ollama_base_url,
+                    model=self.config.ollama_model
+                )
+                return "ollama"  # Return string identifier
             elif self.config.llm_provider == "openai":
                 import openai
                 return openai.OpenAI(api_key=self.config.openai_api_key)
@@ -316,6 +325,32 @@ class CareerAgent:
     async def _call_llm(self, prompt: str, analysis_type: AnalysisType) -> str:
         """Make API call to the configured LLM."""
         try:
+            # Ollama local LLM calls (check first before demo fallback)
+            if self.config.llm_provider == "ollama" and self.ollama_client:
+                self.logger.info("Using Ollama local LLM")
+                try:
+                    # Use specialized methods for different analysis types
+                    if analysis_type == AnalysisType.CAREER_PATH:
+                        return await self.ollama_client.generate_career_analysis(prompt)
+                    elif analysis_type == AnalysisType.RESUME_REVIEW:
+                        return await self.ollama_client.generate_resume_review(prompt)
+                    elif analysis_type == AnalysisType.MOCK_INTERVIEW:
+                        # For interview questions generation
+                        if "Generate" in prompt and "interview questions" in prompt:
+                            role = prompt.split("for a ")[-1].split(" position")[0]
+                            return await self.ollama_client.generate_interview_questions(role)
+                        else:
+                            # For interview evaluation
+                            return await self.ollama_client.generate(prompt)
+                    else:
+                        # Default generation for other types
+                        return await self.ollama_client.generate(prompt)
+                        
+                except Exception as ollama_error:
+                    self.logger.error(f"Ollama call failed: {ollama_error}")
+                    self.logger.info("Falling back to demo response")
+                    return self._get_demo_response(analysis_type)
+            
             # Use demo mode if configured or if no client available
             if self.config.llm_provider == "demo" or self.llm_client is None:
                 self.logger.info("Using demo response (no API key configured)")
@@ -341,7 +376,9 @@ class CareerAgent:
                 return self._get_demo_response(analysis_type)
             
             else:
-                raise ValueError(f"Unsupported LLM provider: {self.config.llm_provider}")
+                # This should not happen if config validation works
+                self.logger.warning(f"Unexpected LLM provider: {self.config.llm_provider}, using demo mode")
+                return self._get_demo_response(analysis_type)
                 
         except Exception as e:
             self.logger.error(f"LLM API call failed: {e}")

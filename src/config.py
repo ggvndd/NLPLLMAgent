@@ -21,9 +21,13 @@ class Config:
     discord_bot_token: str
     
     # LLM Provider Configuration
-    llm_provider: str  # "openai" or "anthropic"
+    llm_provider: str  # "openai", "anthropic", or "ollama"
     openai_api_key: Optional[str] = None
     anthropic_api_key: Optional[str] = None
+    
+    # Ollama Configuration
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_model: str = "llama3.1:8b"
     
     # Logging Configuration
     log_level: str = "INFO"
@@ -40,6 +44,8 @@ class Config:
         self.llm_provider = os.getenv("LLM_PROVIDER", "openai").lower()
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
         self.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+        self.ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+        self.ollama_model = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
         self.log_level = os.getenv("LOG_LEVEL", "INFO").upper()
         self.log_dir = os.getenv("LOG_DIR", "logs")
         
@@ -61,8 +67,8 @@ class Config:
         if self.llm_provider == "anthropic" and not self.anthropic_api_key:
             warnings.append("ANTHROPIC_API_KEY not set - will run in demo mode")
         
-        if self.llm_provider not in ["openai", "anthropic", "demo"]:
-            errors.append("LLM_PROVIDER must be either 'openai', 'anthropic', or 'demo'")
+        if self.llm_provider not in ["openai", "anthropic", "ollama", "demo"]:
+            errors.append("LLM_PROVIDER must be 'openai', 'anthropic', 'ollama', or 'demo'")
         
         if errors:
             raise ValueError(f"Configuration errors: {', '.join(errors)}")
