@@ -99,6 +99,7 @@ celerybeat.pid
 .env
 .env.example
 .env.demo
+.env.ollama
 .venv
 env/
 venv/
