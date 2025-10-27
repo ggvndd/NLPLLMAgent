@@ -91,30 +91,20 @@ class OllamaClient:
         """
         try:
             # Prepare the request payload
-            messages = []
-            
-            if system_prompt:
-                messages.append({
-                    "role": "system", 
-                    "content": system_prompt
-                })
-            
-            messages.append({
-                "role": "user", 
-                "content": prompt
-            })
-            
             payload = {
                 "model": self.model,
-                "messages": messages,
+                "prompt": prompt,
                 "stream": False,
                 "options": {
                     "temperature": kwargs.get("temperature", 0.7),
                     "top_p": kwargs.get("top_p", 0.9),
-                    "max_tokens": kwargs.get("max_tokens", 2000),
-                    "stop": kwargs.get("stop", None)
+                    "num_predict": kwargs.get("max_tokens", 2000),
                 }
             }
+            
+            # Add system prompt if provided
+            if system_prompt:
+                payload["system"] = system_prompt
             
             # Remove None values
             payload["options"] = {k: v for k, v in payload["options"].items() if v is not None}
@@ -123,7 +113,7 @@ class OllamaClient:
             
             session = await self._get_session()
             async with session.post(
-                f"{self.base_url}/api/chat",
+                f"{self.base_url}/api/generate",
                 json=payload,
                 timeout=aiohttp.ClientTimeout(total=120)  # Increased timeout for complex requests
             ) as response:
@@ -135,8 +125,8 @@ class OllamaClient:
                 data = await response.json()
                 
                 # Extract the response content
-                if "message" in data and "content" in data["message"]:
-                    response_text = data["message"]["content"]
+                if "response" in data:
+                    response_text = data["response"]
                     self.logger.info(f"Generated response ({len(response_text)} chars)")
                     return response_text.strip()
                 else:

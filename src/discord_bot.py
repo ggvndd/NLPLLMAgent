@@ -11,7 +11,8 @@ import io
 import json
 import logging
 import traceback
-from typing import Optional, List, Dict, Any
+from datetime import datetime
+from typing import Optional, List, Dict, Any, Union
 
 import discord
 from discord.ext import commands
@@ -46,7 +47,7 @@ class CareerCoachBot(commands.Bot):
         
         # Initialize bot with command prefix
         super().__init__(
-            command_prefix='!',
+            command_prefix='!',  # Keep prefix for backward compatibility
             intents=intents,
             help_command=None  # We'll create a custom help command
         )
@@ -55,10 +56,15 @@ class CareerCoachBot(commands.Bot):
         self.career_agent = CareerAgent(config)
         self.logger = setup_logger(__name__, config.log_level)
         
-        # Store user sessions for mock interviews
+        # Store user sessions
         self.interview_sessions: Dict[int, Dict] = {}
+        self.user_contexts: Dict[int, Dict[str, Any]] = {}  # Store conversation context
         
-        self.logger.info("Career Coach Discord Bot initialized")
+        # Initialize conversation handler
+        from conversation_handler import ConversationHandler
+        self.conversation_handler = ConversationHandler()
+        
+        self.logger.info("Career Coach Discord Bot initialized with conversation support")
     
     async def on_ready(self):
         """Called when the bot is ready and connected to Discord."""
@@ -68,9 +74,170 @@ class CareerCoachBot(commands.Bot):
         # Set bot status
         activity = discord.Activity(
             type=discord.ActivityType.listening,
-            name="!help for career coaching"
+            name="Chat with me about your career!"
         )
         await self.change_presence(activity=activity)
+
+    def _is_greeting(self, message: str) -> bool:
+        """Check if a message is a greeting."""
+        greetings = {'hi', 'hello', 'hey', 'halo', 'hai'}
+        return message.lower().strip() in greetings
+    
+    def _format_conversation_response(self, response_text: str) -> Union[str, discord.Embed]:
+        """Format the response appropriately based on content."""
+        # For very short responses, just return as text
+        if len(response_text) < 100 and not any(marker in response_text.lower() for marker in ['steps:', 'recommendations:', '1.', '•']):
+            return response_text
+
+        try:
+            # Check if response has structured data
+            if any(marker in response_text.lower() for marker in ['steps:', 'recommendations:', '1.', '•', '\n\n']):
+                embed = discord.Embed(color=0x00ff00)
+                
+                # Split response into sections
+                sections = response_text.split('\n\n')
+                
+                # First section as main description
+                embed.description = sections[0]
+                
+                # Process remaining sections
+                for section in sections[1:]:
+                    if ':' in section:
+                        title, content = section.split(':', 1)
+                        # Clean up the title and add appropriate emoji
+                        clean_title = title.strip()
+                        if 'step' in clean_title.lower():
+                            emoji = '📝'
+                        elif 'recommend' in clean_title.lower():
+                            emoji = '💡'
+                        elif 'suggest' in clean_title.lower():
+                            emoji = '✨'
+                        elif 'example' in clean_title.lower():
+                            emoji = '🔍'
+                        else:
+                            emoji = '💬'
+                        
+                        embed.add_field(
+                            name=f"{emoji} {clean_title}",
+                            value=content.strip(),
+                            inline=False
+                        )
+                    else:
+                        # Add as a continuation if it's not a new section
+                        last_field = embed.fields[-1] if embed.fields else None
+                        if last_field:
+                            updated_value = last_field.value + "\n\n" + section.strip()
+                            # Remove and re-add field to update it
+                            embed.remove_field(-1)
+                            embed.add_field(
+                                name=last_field.name,
+                                value=updated_value,
+                                inline=False
+                            )
+                        else:
+                            embed.add_field(
+                                name="� Additional Info",
+                                value=section.strip(),
+                                inline=False
+                            )
+                
+                return embed
+            else:
+                # For conversational responses, just return as text
+                return response_text
+                
+        except Exception as e:
+            # If any error in formatting, fall back to plain text
+            self.logger.error(f"Error formatting response: {e}")
+            return response_text
+    
+    async def _generate_contextual_response(self, message: discord.Message, context: Dict[str, Any]) -> Union[str, discord.Embed]:
+        """Generate a contextual response based on the conversation history."""
+        try:
+            # Get response from career agent
+            response = await self.career_agent.generate_chat_response(
+                message.content,
+                context
+            )
+            
+            # Extract any skills mentioned
+            skills = self.conversation_handler.extract_skills(message.content)
+            if skills:
+                # Update context with skills
+                context['skills'] = context.get('skills', []) + skills
+            
+            # Format the response appropriately
+            return self._format_conversation_response(response)
+            
+        except Exception as e:
+            self.logger.error(f"Error generating response: {e}")
+            return "I apologize, but I'm having trouble right now. Could you try rephrasing your question?"
+    
+    async def on_message(self, message):
+        """Handle all messages sent in the server."""
+        # Ignore messages from self
+        if message.author == self.user:
+            return
+            
+        # First, process commands for backward compatibility
+        await self.process_commands(message)
+        
+        # If message starts with prefix, don't process it as conversation
+        if message.content.startswith(self.command_prefix):
+            return
+            
+        try:
+            # Get user context
+            user_context = self.user_contexts.get(message.author.id, {})
+            
+            # Get or create user context
+            if message.author.id not in self.user_contexts:
+                self.user_contexts[message.author.id] = {
+                    'state': 'initial',
+                    'conversation_history': []
+                }
+            
+            user_context = self.user_contexts[message.author.id]
+            user_context['conversation_history'].append({
+                'user': message.content,
+                'timestamp': message.created_at.isoformat()
+            })
+
+            # Handle the message based on content and context
+            async with message.channel.typing():
+                if self._is_greeting(message.content) and user_context['state'] == 'initial':
+                    response = self.conversation_handler.get_response_for_greeting()
+                    user_context['state'] = 'engaged'
+                else:
+                    # Try to understand user's message and provide relevant response
+                    response = await self._generate_contextual_response(message, user_context)
+                
+                # Update conversation history with bot's response
+                user_context['conversation_history'].append({
+                    'bot': response,
+                    'timestamp': datetime.now().isoformat()
+                })
+                
+                # If response is a string, send directly
+                if isinstance(response, str):
+                    await message.channel.send(response)
+                # If response is an embed, send as embed
+                elif isinstance(response, discord.Embed):
+                    await message.channel.send(embed=response)
+                # If response is a list/tuple of embeds, send all
+                elif isinstance(response, (list, tuple)):
+                    for item in response:
+                        if isinstance(item, discord.Embed):
+                            await message.channel.send(embed=item)
+                        else:
+                            await message.channel.send(item)
+                
+        except Exception as e:
+            self.logger.error(f"Error processing message: {e}")
+            await message.channel.send(
+                "I encountered an error processing your message. "
+                "Please try rephrasing or use one of the specific commands like !help"
+            )
     
     async def on_command_error(self, ctx, error):
         """Handle command errors gracefully."""
@@ -97,27 +264,45 @@ def create_bot(config: Config) -> CareerCoachBot:
     async def help_command(ctx):
         """Show available commands and usage information."""
         embed = discord.Embed(
-            title="🤖 Career Coach Bot - Commands",
-            description="AI-powered career guidance and coaching",
+            title="🤖 Career Coach Bot",
+            description="I'm your AI career coach! You can chat with me naturally or use commands.",
             color=0x00ff00
         )
         
-        commands_info = [
-            ("!career_analyze <skills>", "Analyze career paths based on your skills\n*Example: !career_analyze Python, Machine Learning, Data Analysis*"),
-            ("!resume_review", "Get resume improvement suggestions (attach your resume as .txt file)"),
-            ("!job_match <preferences>", "Find matching job opportunities\n*Example: !job_match Remote, Tech, $80k+*"),
-            ("!mock_interview <role>", "Start a mock interview simulation\n*Example: !mock_interview Software Engineer*"),
-            ("!skill_gap <current_skills> | <target_role>", "Analyze skills needed for target role\n*Example: !skill_gap Python, SQL | Data Scientist*"),
-            ("!profile_create", "Create your career profile for personalized recommendations"),
-            ("!help", "Show this help message")
+        # Natural conversation examples
+        conversation_examples = [
+            ("💬 Chat with me naturally", 
+             "Just talk to me like you would to a career coach! Examples:\n"
+             "• 'Can you help me with my career?'\n"
+             "• 'I want to become a Data Scientist'\n"
+             "• 'Review my resume please'\n"
+             "• 'What jobs match my skills?'"
+            ),
         ]
         
+        # Traditional commands (for backward compatibility)
+        commands_info = [
+            ("⌨️ Or use traditional commands:", "The following commands are also available:"),
+            ("!career_analyze <skills>", "Analyze career paths\n*Example: !career_analyze Python, Machine Learning*"),
+            ("!resume_review", "Review resume (attach .txt file)"),
+            ("!job_match <preferences>", "Find job matches\n*Example: !job_match Remote, Tech*"),
+            ("!mock_interview <role>", "Practice interviews\n*Example: !mock_interview Software Engineer*"),
+            ("!skill_gap <skills | role>", "Analyze skill gaps\n*Example: !skill_gap Python | Data Scientist*")
+        ]
+        
+        # Add conversation examples
+        for name, description in conversation_examples:
+            embed.add_field(name=name, value=description, inline=False)
+            
+        # Add command information
         for name, description in commands_info:
             embed.add_field(name=name, value=description, inline=False)
         
         embed.add_field(
             name="💡 Tips",
-            value="• Use quotes for multi-word inputs: `\"Software Engineer\"`\n• Attach resume as .txt file for review\n• Be specific with your preferences for better matches",
+            value="• Be specific about your skills and goals\n"
+                 "• Attach resume as .txt file for review\n"
+                 "• Feel free to ask follow-up questions",
             inline=False
         )
         

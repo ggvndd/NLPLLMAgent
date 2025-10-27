@@ -114,11 +114,11 @@ class CareerAgent:
                 )
                 return "ollama"  # Return string identifier
             elif self.config.llm_provider == "openai":
-                import openai
-                return openai.OpenAI(api_key=self.config.openai_api_key)
+                # Don't initialize here, we'll create client per request
+                return "openai"
             elif self.config.llm_provider == "anthropic":
-                import anthropic
-                return anthropic.Anthropic(api_key=self.config.anthropic_api_key)
+                # Don't initialize here, we'll create client per request
+                return "anthropic"
             else:
                 raise ValueError(f"Unsupported LLM provider: {self.config.llm_provider}")
         except Exception as e:
@@ -325,60 +325,64 @@ class CareerAgent:
     async def _call_llm(self, prompt: str, analysis_type: AnalysisType) -> str:
         """Make API call to the configured LLM."""
         try:
-            # Ollama local LLM calls (check first before demo fallback)
+            # Ollama local LLM calls
             if self.config.llm_provider == "ollama" and self.ollama_client:
                 self.logger.info("Using Ollama local LLM")
                 try:
-                    # Use specialized methods for different analysis types
-                    if analysis_type == AnalysisType.CAREER_PATH:
-                        return await self.ollama_client.generate_career_analysis(prompt)
-                    elif analysis_type == AnalysisType.RESUME_REVIEW:
-                        return await self.ollama_client.generate_resume_review(prompt)
-                    elif analysis_type == AnalysisType.MOCK_INTERVIEW:
-                        # For interview questions generation
-                        if "Generate" in prompt and "interview questions" in prompt:
-                            role = prompt.split("for a ")[-1].split(" position")[0]
-                            return await self.ollama_client.generate_interview_questions(role)
-                        else:
-                            # For interview evaluation
-                            return await self.ollama_client.generate(prompt)
-                    else:
-                        # Default generation for other types
-                        return await self.ollama_client.generate(prompt)
-                        
+                    return await self.ollama_client.generate(prompt)
                 except Exception as ollama_error:
                     self.logger.error(f"Ollama call failed: {ollama_error}")
-                    self.logger.info("Falling back to demo response")
+                    self.logger.info("Falling back to OpenAI")
+            
+            # OpenAI implementation
+            if self.config.llm_provider == "openai" and self.config.openai_api_key:
+                try:
+                    import openai
+                    client = openai.AsyncOpenAI(api_key=self.config.openai_api_key)
+                    
+                    response = await client.chat.completions.create(
+                        model="gpt-3.5-turbo",
+                        messages=[
+                            {"role": "system", "content": "You are a helpful AI assistant specializing in career advice but capable of engaging in natural conversation about any topic."},
+                            {"role": "user", "content": prompt}
+                        ],
+                        temperature=0.7,
+                        max_tokens=800,
+                        top_p=0.9,
+                    )
+                    
+                    return response.choices[0].message.content
+                    
+                except Exception as openai_error:
+                    self.logger.error(f"OpenAI call failed: {openai_error}")
+                    self.logger.info("Falling back to demo mode")
                     return self._get_demo_response(analysis_type)
             
-            # Use demo mode if configured or if no client available
-            if self.config.llm_provider == "demo" or self.llm_client is None:
-                self.logger.info("Using demo response (no API key configured)")
-                return self._get_demo_response(analysis_type)
+            # Anthropic implementation (if needed)
+            if self.config.llm_provider == "anthropic" and self.config.anthropic_api_key:
+                try:
+                    import anthropic
+                    client = anthropic.Anthropic(api_key=self.config.anthropic_api_key)
+                    
+                    response = client.messages.create(
+                        model="claude-2",
+                        max_tokens=1000,
+                        messages=[{"role": "user", "content": prompt}]
+                    )
+                    return response.content[0].text
+                    
+                except Exception as anthropic_error:
+                    self.logger.error(f"Anthropic call failed: {anthropic_error}")
+                    self.logger.info("Falling back to demo mode")
+                    return self._get_demo_response(analysis_type)
             
-            # Check for missing API keys
-            if (self.config.llm_provider == "openai" and not self.config.openai_api_key) or \
-               (self.config.llm_provider == "anthropic" and not self.config.anthropic_api_key):
-                self.logger.info("API key missing, using demo response")
-                return self._get_demo_response(analysis_type)
-            
-            # Real API calls (will be implemented when you have API keys)
-            if self.config.llm_provider == "openai":
-                # OpenAI API call would go here
-                # For now, fall back to demo
-                self.logger.info("OpenAI API not implemented in demo, using demo response")
-                return self._get_demo_response(analysis_type)
-            
-            elif self.config.llm_provider == "anthropic":
-                # Anthropic API call would go here  
-                # For now, fall back to demo
-                self.logger.info("Anthropic API not implemented in demo, using demo response")
-                return self._get_demo_response(analysis_type)
-            
-            else:
-                # This should not happen if config validation works
-                self.logger.warning(f"Unexpected LLM provider: {self.config.llm_provider}, using demo mode")
-                return self._get_demo_response(analysis_type)
+            # If no valid provider is configured, use demo mode
+            self.logger.info("No valid LLM provider configured, using demo mode")
+            return self._get_demo_response(analysis_type)
+                
+        except Exception as e:
+            self.logger.error(f"LLM API call failed: {e}")
+            return self._get_demo_response(analysis_type)
                 
         except Exception as e:
             self.logger.error(f"LLM API call failed: {e}")
@@ -389,7 +393,8 @@ class CareerAgent:
     def _create_career_analysis_prompt(self, user_profile: UserProfile) -> str:
         """Create prompt for career path analysis."""
         return f"""
-        Analyze this user's profile and provide 3-5 career recommendations:
+        You are an expert career coach. Analyze this user's profile and provide 3-5 career recommendations
+        in a friendly, conversational tone while maintaining professionalism:
         
         Skills: {', '.join(user_profile.skills)}
         Experience: {', '.join(user_profile.experience)}
@@ -402,9 +407,10 @@ class CareerAgent:
         2. Required skills and skill gaps
         3. Salary range
         4. Career progression path
-        5. Reasoning for the match
+        5. Personalized reasoning for why this would be a good match
         
-        Format as JSON array with structured data.
+        Format as JSON array with structured data. Make the reasoning field especially 
+        conversational and encouraging while remaining honest about skill gaps.
         """
     
     def _create_resume_review_prompt(self, resume_text: str, target_role: Optional[str]) -> str:
@@ -593,6 +599,78 @@ class CareerAgent:
                 "timeline": "3-6 months",
                 "resources": []
             }
+    
+    async def generate_chat_response(self, message: str, context: Dict[str, Any]) -> str:
+        """Generate a contextual chat response using LLM."""
+        from prompts import GENERAL_CHAT_PROMPT
+        
+        # Format conversation history for context
+        history = ""
+        if 'conversation_history' in context:
+            # Include more context (up to 10 messages) for better conversation flow
+            for entry in context['conversation_history'][-10:]:
+                if 'user' in entry:
+                    history += f"User: {entry['user']}\n"
+                if 'bot' in entry:
+                    history += f"Assistant: {entry['bot']}\n"
+        
+        try:
+            if self.config.llm_provider == "ollama" and self.ollama_client:
+                # Use Ollama for more natural conversation
+                prompt = GENERAL_CHAT_PROMPT.format(
+                    conversation_history=history,
+                    user_message=message
+                )
+                
+                # Generate response with more temperature for variety
+                response = await self.ollama_client.generate(
+                    prompt,
+                    temperature=0.7,  # Add some randomness for more natural responses
+                    top_p=0.9,        # Allow for more creative responses
+                    max_tokens=500    # Allow longer responses
+                )
+                return response
+            
+            # For other providers or demo mode
+            if self.config.llm_provider == "openai" and self.config.openai_api_key:
+                # Implement OpenAI API call here
+                # For now, use demo response
+                return self._get_demo_response(AnalysisType.CAREER_PATH)
+            
+            # Default to demo response
+            return self._get_conversational_demo_response(message, history)
+            
+        except Exception as e:
+            self.logger.error(f"Error generating chat response: {e}")
+            return "I'm having a moment here. Could you try saying that again differently?"
+    
+    def _get_conversational_demo_response(self, message: str, history: str) -> str:
+        """Generate a more natural demo response based on the message content."""
+        # Simple keyword-based response system for demo mode
+        message_lower = message.lower()
+        
+        if any(greeting in message_lower for greeting in ['hi', 'hello', 'hey', 'halo']):
+            return "Hi there! How can I help you today? 😊"
+            
+        if '?' in message:
+            return ("That's an interesting question! Let me share my thoughts on that. "
+                   "Based on my understanding, I think...")
+            
+        if any(word in message_lower for word in ['help', 'assist', 'support']):
+            return ("I'd be happy to help you with that! Could you tell me more about "
+                   "what specifically you're looking for?")
+            
+        if any(word in message_lower for word in ['thank', 'thanks', 'terima kasih']):
+            return ("You're welcome! Let me know if there's anything else you'd like "
+                   "to discuss or explore further!")
+            
+        if any(word in message_lower for word in ['sad', 'stressed', 'worried', 'confused']):
+            return ("I hear you, and it's completely normal to feel that way. Would you "
+                   "like to tell me more about what's on your mind?")
+        
+        # Default response for other messages
+        return ("I understand what you're saying. Could you tell me more about that? "
+                "I'm really interested in hearing your thoughts and helping however I can.")
     
     def _get_demo_response(self, analysis_type: AnalysisType) -> str:
         """Get demo response when API is not available."""
