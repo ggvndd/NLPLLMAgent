@@ -24,6 +24,7 @@ from utils.validators import (
     InputValidator, validate_discord_message_length, 
     format_validation_errors
 )
+from storage import BotStorage
 
 
 class CareerCoachBot(commands.Bot):
@@ -56,15 +57,20 @@ class CareerCoachBot(commands.Bot):
         self.career_agent = CareerAgent(config)
         self.logger = setup_logger(__name__, config.log_level)
         
-        # Store user sessions
-        self.interview_sessions: Dict[int, Dict] = {}
-        self.user_contexts: Dict[int, Dict[str, Any]] = {}  # Store conversation context
+        # Initialize storage system
+        self.storage = BotStorage(data_dir="data", log_level=config.log_level)
+        
+        # Load persistent data
+        self.user_contexts = self.storage.load_user_contexts()
+        self.interview_sessions = self.storage.load_interview_sessions()
         
         # Initialize conversation handler
         from conversation_handler import ConversationHandler
         self.conversation_handler = ConversationHandler()
         
-        self.logger.info("Career Coach Discord Bot initialized with conversation support")
+        loaded_users = len(self.user_contexts)
+        loaded_sessions = len(self.interview_sessions) 
+        self.logger.info(f"Career Coach Discord Bot initialized - Loaded {loaded_users} users, {loaded_sessions} interview sessions")
     
     async def on_ready(self):
         """Called when the bot is ready and connected to Discord."""
@@ -202,6 +208,11 @@ class CareerCoachBot(commands.Bot):
                 'user': message.content,
                 'timestamp': message.created_at.isoformat()
             })
+            
+            # Auto-save user contexts every 10 messages
+            history_length = len(user_context.get('conversation_history', []))
+            if history_length % 10 == 0:
+                self._auto_save_data()
 
             # Handle the message based on content and context
             async with message.channel.typing():
@@ -213,8 +224,9 @@ class CareerCoachBot(commands.Bot):
                     response = await self._generate_contextual_response(message, user_context)
                 
                 # Update conversation history with bot's response
+                response_text = response if isinstance(response, str) else str(response)
                 user_context['conversation_history'].append({
-                    'bot': response,
+                    'bot': response_text,
                     'timestamp': datetime.now().isoformat()
                 })
                 
@@ -253,6 +265,35 @@ class CareerCoachBot(commands.Bot):
             await ctx.send("❌ An error occurred while processing your command. Please try again.")
             # Log the full traceback for debugging
             self.logger.error(f"Unexpected error: {traceback.format_exc()}")
+    
+    def _auto_save_data(self):
+        """Auto-save user data periodically."""
+        try:
+            self.storage.save_user_contexts(self.user_contexts)
+            self.storage.save_interview_sessions(self.interview_sessions)
+            self.logger.debug("Auto-saved user data")
+        except Exception as e:
+            self.logger.error(f"Failed to auto-save data: {e}")
+    
+    async def save_all_data(self):
+        """Save all bot data before shutdown."""
+        try:
+            self.logger.info("Saving all bot data before shutdown...")
+            contexts_saved = self.storage.save_user_contexts(self.user_contexts)
+            sessions_saved = self.storage.save_interview_sessions(self.interview_sessions)
+            
+            if contexts_saved and sessions_saved:
+                self.logger.info("✅ All data saved successfully")
+            else:
+                self.logger.warning("⚠️ Some data may not have been saved properly")
+                
+        except Exception as e:
+            self.logger.error(f"Error saving data on shutdown: {e}")
+    
+    async def close(self):
+        """Override close to save data before shutting down."""
+        await self.save_all_data()
+        await super().close()
 
 
 # Create bot instance
@@ -513,10 +554,11 @@ def create_bot(config: Config) -> CareerCoachBot:
                 # Create interview session
                 session = await bot.career_agent.conduct_mock_interview(role)
                 
-                # Store session for user
-                bot.interview_sessions[ctx.author.id] = session
+            # Store session for user
+            bot.interview_sessions[ctx.author.id] = session
             
-            # Send first question
+            # Save interview sessions
+            bot.storage.save_interview_sessions(bot.interview_sessions)            # Send first question
             embed = discord.Embed(
                 title=f"🎤 Mock Interview: {role}",
                 description="I'll ask you interview questions. Respond naturally and I'll provide feedback at the end.",
@@ -659,6 +701,9 @@ def create_bot(config: Config) -> CareerCoachBot:
             # Clean up session
             del bot.interview_sessions[user_id]
             
+            # Save updated interview sessions
+            bot.storage.save_interview_sessions(bot.interview_sessions)
+            
         except Exception as e:
             bot.logger.error(f"Error in interview_end: {e}")
             await ctx.send("❌ Sorry, I encountered an error processing your feedback. Please try again.")
@@ -777,6 +822,7 @@ def create_bot(config: Config) -> CareerCoachBot:
 
 async def main():
     """Main function to run the Discord bot."""
+    bot = None
     try:
         # Load configuration
         config = Config()
@@ -787,18 +833,30 @@ async def main():
         print("🤖 Starting Career Coach Discord Bot...")
         print(f"📊 LLM Provider: {config.llm_provider}")
         print(f"📝 Log Level: {config.log_level}")
+        
+        # Show storage info
+        stats = bot.storage.get_storage_stats()
+        print(f"💾 Data directory: {stats['data_directory']}")
+        print(f"💾 Loaded {len(bot.user_contexts)} user contexts")
         print("=" * 50)
         
         # Run the bot
         await bot.start(config.discord_bot_token)
         
     except KeyboardInterrupt:
-        print("\n👋 Bot shutdown requested")
+        print("\n👋 Bot shutdown requested by user")
     except Exception as e:
         print(f"❌ Error starting bot: {e}")
         logging.error(f"Bot startup error: {e}")
     finally:
         print("🔄 Cleaning up...")
+        if bot:
+            try:
+                await bot.save_all_data()
+                print("✅ Data saved successfully")
+            except Exception as e:
+                print(f"⚠️ Error saving data: {e}")
+        print("👋 Goodbye!")
 
 
 if __name__ == "__main__":

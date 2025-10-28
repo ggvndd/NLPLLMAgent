@@ -1,0 +1,16 @@
+{
+  "saved_at": "2025-10-28T23:49:07.931923",
+  "active_sessions": 1,
+  "sessions": {
+    "123456": {
+      "role": "Software Engineer",
+      "questions": [
+        "Tell me about yourself",
+        "What's your biggest strength?"
+      ],
+      "current_question": 0,
+      "answers": [],
+      "session_id": "interview_test123"
+    }
+  }
+}

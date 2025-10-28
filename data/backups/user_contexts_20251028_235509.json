@@ -1,0 +1,23 @@
+{
+  "saved_at": "2025-10-28T23:49:07.928259",
+  "user_count": 1,
+  "contexts": {
+    "123456": {
+      "state": "engaged",
+      "conversation_history": [
+        {
+          "user": "Hi!",
+          "timestamp": "2025-10-28T10:00:00"
+        },
+        {
+          "bot": "Hello! How can I help?",
+          "timestamp": "2025-10-28T10:00:01"
+        }
+      ],
+      "skills": [
+        "Python",
+        "SQL"
+      ]
+    }
+  }
+}
