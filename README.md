@@ -21,7 +21,6 @@ An intelligent career coaching Discord bot that provides **natural, human-like c
 - 🎯 **Career Path Analysis** - AI-powered recommendations based on your profile  
 - 💼 **Job Matching** - Find opportunities matching your skills and preferences
 - � **Resume Review** - Detailed feedback and improvement suggestions
-- 🎭 **Mock Interviews** - Practice with role-specific questions and feedback
 - 🧠 **Persistent Memory** - Remembers you across bot restarts
 - 🗄️ **Data Storage** - Automatic backups and conversation history
 - 🧪 **Comprehensive Testing** - Validated with extensive test scenarios
@@ -55,8 +54,6 @@ Bot: [Returns 5-7 job opportunities with detailed matching and requirements]
 - **Career Path Analysis**: AI recommendations with match percentages and progression paths
 - **Job Matching**: Find 5-7 opportunities with salary ranges and location preferences  
 - **Resume Review**: Professional feedback with ATS optimization and improvement tips
-- **Mock Interviews**: Role-specific practice questions with detailed feedback
-- **Skill Gap Analysis**: Identify and prioritize skills needed for target careers
 
 ### 💬 **Human-like Discord Integration**
 - **Natural Conversations**: Responds like a friend to casual chat, expert for career topics
@@ -338,35 +335,6 @@ LOG_DIR=logs
 - **Interview session tracking**: Maintains interview state
 - **Automatic cleanup**: Old backups removed automatically
 
-## 🎯 **Why This Project is Awesome**
-
-### ✨ **Key Innovations**
-
-- **🗣️ Human-like Conversations**: First Discord bot that actually chats naturally! Responds like a friend to casual topics, expert for career advice
-- **🆓 100% FREE**: No API costs, subscriptions, or rate limits - runs entirely on your local machine with Ollama
-- **🧠 Smart Memory**: Remembers your skills, preferences, and conversations across bot restarts - like talking to a real career coach
-- **⚡ Production Ready**: Clean architecture, comprehensive testing, enterprise logging - not just a demo!
-- **🎯 Dual Intelligence**: Automatically detects casual chat vs career questions and responds appropriately
-
-### 📊 **Perfect For**
-
-- **Students**: Learn about career paths and get personalized guidance
-- **Job Seekers**: Get expert advice on resumes, interviews, and job matching  
-- **Career Changers**: Explore new paths and identify skill gaps
-- **Developers**: Showcase advanced AI integration and Discord bot development
-- **Teams**: Shared development environment with persistent data
-- **Portfolio Projects**: Demonstrate real-world AI application with production quality
-
-### 🚀 **Technical Excellence**
-
-- **Natural Language Processing**: Advanced intent detection separates casual from career conversations
-- **Persistent Storage**: JSON-based system with automatic backups and data integrity
-- **Robust Error Handling**: Graceful fallbacks and comprehensive logging
-- **Modular Architecture**: Clean separation of concerns, easy to extend
-- **Comprehensive Testing**: 8 detailed test scenarios covering all functionality
-
-
-
 
 ## 🏗️ **Technical Architecture**
 
@@ -401,11 +369,3 @@ LOG_DIR=logs
 - Pattern matching for career vs casual conversation topics
 - Skill extraction and entity recognition
 - Context preservation across message exchanges
-
-### **Design Principles**
-
-- **Human-First Design**: Prioritizes natural conversation over rigid commands
-- **Privacy-Focused**: All data stays local - no external API calls
-- **Production Quality**: Enterprise logging, error handling, data validation
-- **Memory-Persistent**: User context survives restarts and maintains relationships
-- **Modular Architecture**: Clean separation of concerns for easy maintenance
