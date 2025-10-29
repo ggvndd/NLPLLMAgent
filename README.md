@@ -1,8 +1,11 @@
-# 🤖 Career Coach LLM Agent
+# CareerMate, Your Partner on JobSeeking
+
+## Done by 
+- Gavind Muhammad Pramahita 
+- Muhammad Zidane Septian Irsyadi
 
 An AI-powered career coaching agent with Discord integration that provides personalized career guidance, resume improvement suggestions, job matching, and interview preparation using **FREE local LLM** (Ollama) with persistent memory.
 
-## 🎉 Status: FULLY FUNCTIONAL & PRODUCTION READY!
 
 **✅ Complete Feature Set Implemented:**
 - 🆓 **FREE Local AI** - Uses Ollama + Llama 3.1:8B (no API costs!)
@@ -10,7 +13,6 @@ An AI-powered career coaching agent with Discord integration that provides perso
 - 💬 **Natural Language Chat** - Conversational AI with intent detection
 - 🎯 **5 Core Career Features** - All working with real AI responses
 - 🔗 **Discord Integration** - Full bot with traditional commands + chat
-- 📊 **CLI Interface** - Direct agent interaction for testing
 - 🗄️ **Data Storage** - JSON-based persistent storage with backups
 - 🧪 **Comprehensive Testing** - 46/53 tests passing
 - 📝 **Enterprise Logging** - Structured logging and error handling
@@ -133,20 +135,7 @@ cp .env.demo .env
 # Uses mock responses, no API keys needed
 ```
 
-**Option 2: Cloud LLM Providers**
-```env
-# OpenAI Configuration
-LLM_PROVIDER=openai
-OPENAI_API_KEY=your_openai_api_key_here
-DISCORD_BOT_TOKEN=your_discord_bot_token_here
-
-# Anthropic Configuration  
-LLM_PROVIDER=anthropic
-ANTHROPIC_API_KEY=your_anthropic_api_key_here
-DISCORD_BOT_TOKEN=your_discord_bot_token_here
-```
-
-**Option 3: Multiple Provider Support**
+**Option 2: Multiple Provider Support**
 ```env
 # The system will use Ollama as primary, fallback to others
 LLM_PROVIDER=ollama
@@ -358,16 +347,6 @@ LLM_PROVIDER=demo
 - **📈 Scalable Architecture**: Easy to extend with new features
 - **🎪 Multi-Modal Interface**: Discord bot + CLI + Python API
 
-### 🏆 Technical Achievements
-
-- **Real AI Integration**: Not just mock responses - actual LLM reasoning
-- **Robust Storage System**: JSON persistence with automatic backups
-- **Intent Detection**: Natural language understanding for conversation flow
-- **Session Management**: Complex interview workflows with state tracking
-- **Provider Abstraction**: Easy switching between OpenAI, Anthropic, Ollama
-- **Comprehensive Testing**: 46+ automated tests with high coverage
-- **Professional Documentation**: Clear setup, usage, and troubleshooting guides
-
 ### 📊 Use Cases
 
 - **Career Coaching**: Personal career guidance and skill development
@@ -377,96 +356,8 @@ LLM_PROVIDER=demo
 - **Portfolio Project**: Demonstrate AI integration and Discord bot development
 - **Team Collaboration**: Shared development environment with persistent data
 
-## 🤝 Contributing
 
-This project is designed for academic and collaborative development:
 
-1. **Clone and Setup**: Follow the installation guide
-2. **Make Changes**: Add features or improvements
-3. **Test Thoroughly**: Run automated tests and manual validation
-4. **Share Data**: Commit storage files for team collaboration
-5. **Document**: Update README and code comments
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
----
-
-**🎉 Built with:** Python 3.9+ • Discord.py • Ollama • Llama 3.1 • JSON Storage • Async Programming
-
-**💡 Perfect for:** NLP Projects • AI Integration • Discord Bots • Career Tech • Educational Demos
-
-## 🔧 Troubleshooting
-
-### Common Issues & Solutions
-
-**Ollama Issues:**
-```bash
-# Check if Ollama is running
-ollama ps
-
-# Start Ollama service
-brew services start ollama  # macOS
-# or
-ollama serve  # Manual start
-
-# Test Ollama directly
-ollama run llama3.1:8b "Hello"
-```
-
-**Discord Bot Issues:**
-1. **Bot not responding**: 
-   - Check Discord bot token in `.env`
-   - Verify bot has Message Content Intent enabled
-   - Ensure bot is invited to server with proper permissions
-
-2. **Memory not persisting**:
-   ```bash
-   # Check data directory exists
-   ls -la data/
-   
-   # Check permissions
-   chmod 755 data/
-   
-   # Verify storage is working
-   PYTHONPATH=src python src/storage.py
-   ```
-
-**Python Environment:**
-```bash
-# Ensure virtual environment is active
-which python  # Should show venv path
-
-# Reinstall dependencies if needed
-pip install -r requirements.txt
-
-# Check Python path for imports
-PYTHONPATH=src python -c "import career_agent; print('OK')"
-```
-
-### Debug Mode
-
-**Enable detailed logging:**
-```env
-LOG_LEVEL=DEBUG
-```
-
-**Check logs:**
-```bash
-tail -f logs/career_agent.log
-```
-
-**Verify configuration:**
-```bash
-PYTHONPATH=src python -c "
-from config import Config
-c = Config()
-print(f'Provider: {c.llm_provider}')
-print(f'Ollama URL: {c.ollama_base_url}')
-print(f'Model: {c.ollama_model}')
-"
-```
 
 ## 👥 Development & Architecture
 
@@ -504,19 +395,3 @@ print(f'Model: {c.ollama_model}')
 - **Data Persistence**: User context survives restarts
 - **Multi-Interface**: CLI, Discord, and Python API access
 - **Provider Agnostic**: Easy switching between LLM providers
-
-### Adding New Features
-
-1. **New Career Function**: Add method to `CareerAgent` class
-2. **Discord Command**: Create command handler in `discord_bot.py`
-3. **CLI Support**: Add argument parser in `main.py`
-4. **Storage**: Update storage schema if needed
-5. **Tests**: Add comprehensive test coverage
-6. **Documentation**: Update README and docstrings
-
-### Collaboration Features
-
-- **Shared Storage**: Data files committed to git for team collaboration
-- **Consistent Environment**: `.env.ollama` template for team setup
-- **Centralized Logging**: Structured logs for debugging
-- **Version Control**: Automatic backups with timestamps
