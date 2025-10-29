@@ -1,5 +1,5 @@
 {
-  "saved_at": "2025-10-29T19:37:30.253548",
+  "saved_at": "2025-10-29T18:55:18.202353",
   "user_count": 3,
   "contexts": {
     "123456": {
@@ -157,84 +157,7 @@
         {
           "bot": "<discord.embeds.Embed object at 0x101c2b0d0>",
           "timestamp": "2025-10-29T15:31:05.763031"
-        },
-        {
-          "user": "Hello! Are you working?",
-          "timestamp": "2025-10-29T11:56:18.826000+00:00"
-        },
-        {
-          "bot": "<discord.embeds.Embed object at 0x1063a6f70>",
-          "timestamp": "2025-10-29T18:56:43.075217"
-        },
-        {
-          "user": "Hi! I'm a software engineer with 4 years of experience in Python and JavaScript. I'm really interested in transitioning to data science but I'm not sure if my background is strong enough. I've been learning some machine learning on my own. What career paths would make sense for me?",
-          "timestamp": "2025-10-29T11:56:55.364000+00:00"
-        },
-        {
-          "bot": "<discord.embeds.Embed object at 0x10643d1f0>",
-          "timestamp": "2025-10-29T18:57:08.674083"
-        },
-        {
-          "user": "I'm looking for job opportunities that match my profile. I have skills in Python, R, SQL, Machine Learning, TensorFlow, Pandas, and Statistics. I have 3 years of experience and I'm interested in Data Science, Machine Learning Engineer, or AI Research roles. I prefer remote work or positions in San Francisco, with a salary range of $90,000 - $130,000. What jobs would be a good fit for me?",
-          "timestamp": "2025-10-29T11:57:38.301000+00:00"
-        },
-        {
-          "bot": "<discord.embeds.Embed object at 0x10643d550>",
-          "timestamp": "2025-10-29T18:58:20.975015"
-        },
-        {
-          "user": "WKWKWK kocak kobisa ya",
-          "timestamp": "2025-10-29T12:16:50.936000+00:00"
-        },
-        {
-          "bot": "<discord.embeds.Embed object at 0x10643d5e0>",
-          "timestamp": "2025-10-29T19:17:06.108542"
-        },
-        {
-          "user": "Can you review my resume and give me feedback? I'm a recent computer science graduate looking for software engineering positions.\n\n[Then paste this resume:]\nJane Smith\nSoftware Engineer\njane.smith@email.com | (555) 123-4567\n\nEducation:\n- BS Computer Science, State University (2024)\n- GPA: 3.7/4.0\n\nExperience:\n- Software Engineering Intern, TechCorp (Summer 2023)\n  - Developed web applications using React and Node.js\n  - Collaborated with team on agile projects\n\nSkills:\n- Programming: Java, Python, JavaScript, React\n- Databases: MySQL, MongoDB\n- Tools: Git, Docker, VS Code\n\nProjects:\n- E-commerce Website: Built full-stack web app with React/Node.js\n- Data Analysis Tool: Python application for processing CSV files",
-          "timestamp": "2025-10-29T12:17:10.763000+00:00"
-        },
-        {
-          "bot": "<discord.embeds.Embed object at 0x10643d940>",
-          "timestamp": "2025-10-29T19:17:24.016529"
-        },
-        {
-          "user": "remind me what i'm good at again?",
-          "timestamp": "2025-10-29T12:20:21.781000+00:00"
-        },
-        {
-          "bot": "<discord.embeds.Embed object at 0x10643d5e0>",
-          "timestamp": "2025-10-29T19:20:34.852908"
-        },
-        {
-          "user": "how you doin so far?",
-          "timestamp": "2025-10-29T12:20:48.455000+00:00"
-        },
-        {
-          "bot": "<discord.embeds.Embed object at 0x10643dca0>",
-          "timestamp": "2025-10-29T19:20:58.559870"
-        },
-        {
-          "user": "hi man u good",
-          "timestamp": "2025-10-29T12:34:54.444000+00:00"
-        },
-        {
-          "bot": "It's good to see you're feeling chipper today! How was your morning? Anything exciting happen? Or are we diving straight back into the world of coding and job hunting? I'm here for either, btw!",
-          "timestamp": "2025-10-29T19:35:07.889765"
-        },
-        {
-          "user": "yeah! tell me what i can do about my skills in data engineering",
-          "timestamp": "2025-10-29T12:35:53.930000+00:00"
-        },
-        {
-          "bot": "<discord.embeds.Embed object at 0x106061f70>",
-          "timestamp": "2025-10-29T19:36:20.735560"
         }
-      ],
-      "skills": [
-        "Python",
-        "JavaScript",
-        "again"
       ]
     },
     "593635660674498562": {
@@ -311,22 +234,6 @@
         {
           "bot": "<discord.embeds.Embed object at 0x1022a0790>",
           "timestamp": "2025-10-29T14:01:13.014373"
-        },
-        {
-          "user": "gacor cik",
-          "timestamp": "2025-10-29T12:04:20.276000+00:00"
-        },
-        {
-          "bot": "<discord.embeds.Embed object at 0x10643d1f0>",
-          "timestamp": "2025-10-29T19:04:29.890417"
-        },
-        {
-          "user": "hi careermate, you remember my name?",
-          "timestamp": "2025-10-29T12:04:51.328000+00:00"
-        },
-        {
-          "bot": "<discord.embeds.Embed object at 0x10643d550>",
-          "timestamp": "2025-10-29T19:04:59.673785"
         }
       ]
     }

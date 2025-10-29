@@ -19,8 +19,9 @@ class ConversationHandler:
         self.intent_patterns = {
             'career_analysis': [
                 r'(?i)what career|career path|job opportunities|career advice',
-                r'(?i)my skills? (?:is|are|include)',
-                r'(?i)recommend.*career|suggest.*career'
+                r'(?i)my skills? (?:is|are|include)|skills.*in|have.*skills',
+                r'(?i)recommend.*career|suggest.*career|python.*skills',
+                r'(?i)machine.*learning|what.*can.*i.*do|skills.*available'
             ],
             'resume_review': [
                 r'(?i)review.*resume|check.*resume',
@@ -28,9 +29,11 @@ class ConversationHandler:
                 r'(?i)cv.*review|review.*cv'
             ],
             'job_match': [
-                r'(?i)find.*job|job.*match',
-                r'(?i)looking for.*job|job.*opportunities',
-                r'(?i)job.*search|search.*job'
+                r'(?i)find.*job|job.*search|looking.*for.*job',
+                r'(?i)career.*opportunit|job.*match|work.*opportunit',
+                r'(?i)employment.*opportunit|job.*recommendation|career.*move',
+                r'(?i)remote.*work|data science.*job|software.*job',
+                r'(?i)engineering.*job|find.*work|job.*opening'
             ],
             'mock_interview': [
                 r'(?i)interview.*practice|practice.*interview',
@@ -46,6 +49,21 @@ class ConversationHandler:
                 r'(?i)^hi$|^hello$|^hey$',
                 r'(?i)^good\s*(morning|afternoon|evening)',
                 r'(?i)help me|assist me|can you help'
+            ],
+            'casual_chat': [
+                r'(?i)how.*you|how.*going|what.*up',
+                r'(?i)weather|tired|stressed|busy|bored',
+                r'(?i)thanks|thank you|appreciate',
+                r'(?i)funny|lol|haha|joke',
+                r'(?i)weekend|holiday|vacation',
+                r'(?i)food|coffee|lunch|dinner',
+                r'(?i)music|movie|tv|netflix',
+                r'(?i)^nice$|^cool$|^awesome$|^great$'
+            ],
+            'personal_check': [
+                r'(?i)how.*day|how.*weekend|how.*feeling',
+                r'(?i)what.*doing|keeping busy',
+                r'(?i)everything.*ok|you.*alright'
             ]
         }
     
@@ -79,8 +97,10 @@ class ConversationHandler:
         # Look for skills after phrases like "I know" or "I'm good at"
         skill_patterns = [
             r'(?i)(?:I know|I\'m good at|my skills are|I can|I have experience (?:in|with))\s+([\w\s,]+)',
+            r'(?i)(?:have skills? (?:in|with)|skills? (?:in|include))\s+([\w\s,.-]+?)(?:\.|and I|I have|\s*\d|\s*with)',
             r'(?i)experience (?:in|with)\s+([\w\s,]+)',
-            r'(?i)skilled (?:in|with)\s+([\w\s,]+)'
+            r'(?i)skilled (?:in|with)\s+([\w\s,]+)',
+            r'(?i)proficient (?:in|with)\s+([\w\s,]+)'
         ]
         
         skills = []
@@ -107,6 +127,65 @@ class ConversationHandler:
                 return match.group(1).strip()
         
         return None
+    
+    def extract_experience(self, message: str) -> List[str]:
+        """Extract experience information from a message."""
+        experience_patterns = [
+            r'(?i)(\d+\s*(?:years?|yrs?)\s*(?:of\s*)?(?:experience|work|working)(?:\s*(?:as|in|with))?[^.]*)',
+            r'(?i)((?:worked|working|experience)\s*(?:as|in|at|with)[^.]*)',
+            r'(?i)(internship[^.]*)',
+            r'(?i)(freelance[^.]*)',
+            r'(?i)(recent graduate|new graduate|just graduated)'
+        ]
+        
+        experience = []
+        for pattern in experience_patterns:
+            matches = re.findall(pattern, message)
+            for match in matches:
+                experience.append(match.strip())
+        
+        return experience if experience else []
+    
+    def extract_interests(self, message: str) -> List[str]:
+        """Extract interests and career goals from a message."""
+        interest_patterns = [
+            r'(?i)interested in\s+([\w\s,]+?)(?:\.|,|$)',
+            r'(?i)love\s+([\w\s,]+?)(?:\.|,|$)',
+            r'(?i)passionate about\s+([\w\s,]+?)(?:\.|,|$)',
+            r'(?i)enjoy\s+([\w\s,]+?)(?:\.|,|$)',
+            r'(?i)want to work (?:in|with)\s+([\w\s,]+?)(?:\.|,|$)'
+        ]
+        
+        interests = []
+        for pattern in interest_patterns:
+            matches = re.findall(pattern, message)
+            for match in matches:
+                # Split by comma or 'and'
+                interests.extend([i.strip() for i in re.split(r',|\sand\s', match) if i.strip()])
+        
+        return interests if interests else []
+    
+    def extract_education(self, message: str) -> List[str]:
+        """Extract education information from a message."""
+        education_patterns = [
+            r'(?i)(bachelor\'?s?\s*(?:degree\s*)?(?:in\s*)?[\w\s]*)',
+            r'(?i)(master\'?s?\s*(?:degree\s*)?(?:in\s*)?[\w\s]*)',
+            r'(?i)(phd|doctorate\s*(?:in\s*)?[\w\s]*)',
+            r'(?i)(degree\s*in\s*[\w\s]*)',
+            r'(?i)(graduated\s*(?:from\s*)?[\w\s]*)',
+            r'(?i)(university\s*[\w\s]*)',
+            r'(?i)(college\s*[\w\s]*)',
+            r'(?i)(certification\s*in\s*[\w\s]*)',
+            r'(?i)(online courses?\s*in\s*[\w\s]*)'
+        ]
+        
+        education = []
+        for pattern in education_patterns:
+            matches = re.findall(pattern, message)
+            for match in matches:
+                education.append(match.strip())
+        
+        return education if education else []
     
     def get_response_for_greeting(self) -> str:
         """Get appropriate response for greeting."""

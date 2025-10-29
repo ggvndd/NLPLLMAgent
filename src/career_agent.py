@@ -392,66 +392,96 @@ class CareerAgent:
     
     def _create_career_analysis_prompt(self, user_profile: UserProfile) -> str:
         """Create prompt for career path analysis."""
-        return f"""
-        You are an expert career coach. Analyze this user's profile and provide 3-5 career recommendations
-        in a friendly, conversational tone while maintaining professionalism:
-        
-        Skills: {', '.join(user_profile.skills)}
-        Experience: {', '.join(user_profile.experience)}
-        Interests: {', '.join(user_profile.interests)}
-        Education: {', '.join(user_profile.education)}
-        Career Goals: {user_profile.career_goals or 'Not specified'}
-        
-        For each recommendation, provide:
-        1. Job title and match percentage (0-100%)
-        2. Required skills and skill gaps
-        3. Salary range
-        4. Career progression path
-        5. Personalized reasoning for why this would be a good match
-        
-        Format as JSON array with structured data. Make the reasoning field especially 
-        conversational and encouraging while remaining honest about skill gaps.
-        """
+        return f"""PROVIDE IMMEDIATE CAREER RECOMMENDATIONS. No introductions, no explanations first.
+
+User Profile:
+- Skills: {', '.join(user_profile.skills)}
+- Experience: {', '.join(user_profile.experience)}
+- Interests: {', '.join(user_profile.interests)}
+- Education: {', '.join(user_profile.education)}
+- Career Goals: {user_profile.career_goals or 'Not specified'}
+
+RESPOND WITH ONLY THIS JSON FORMAT (no markdown, no text before/after):
+
+[
+  {{
+    "job_title": "Data Scientist",
+    "match_percentage": 85,
+    "required_skills": ["Python", "Machine Learning", "Statistics", "SQL", "Data Visualization"],
+    "skill_gaps": ["Deep Learning", "Cloud Computing", "A/B Testing"],
+    "salary_range": "$75,000 - $120,000",
+    "career_path": ["Junior Data Analyst", "Data Scientist", "Senior Data Scientist", "Lead Data Scientist"],
+    "reasoning": "Direct match analysis: Strong Python/ML skills align perfectly. Need deep learning + cloud skills for advancement. Growth path is clear and achievable in 2-3 years."
+  }}
+]
+
+Requirements:
+- 3-5 career options ranked by fit
+- Match %: 60-95% based on actual skill alignment  
+- Realistic salary for experience level
+- Specific skill gaps (2-4 items)
+- Clear 4-step career path
+- Concise reasoning (50-80 words, direct and actionable)"""
     
     def _create_resume_review_prompt(self, resume_text: str, target_role: Optional[str]) -> str:
         """Create prompt for resume review."""
-        role_context = f" for a {target_role} position" if target_role else ""
-        return f"""
-        Review this resume{role_context} and provide detailed feedback:
-        
-        Resume Content:
-        {resume_text}
-        
-        Provide analysis including:
-        1. Overall score (0-100)
-        2. Key strengths (3-5 points)
-        3. Areas for improvement (3-5 points)
-        4. Specific suggestions for enhancement
-        5. Keywords to add for better ATS compatibility
-        6. Formatting and structure feedback
-        
-        Format as structured JSON with clear sections.
-        """
+        role_context = f" for {target_role}" if target_role else ""
+        return f"""ANALYZE THIS RESUME{role_context}. Give direct feedback immediately.
+
+Resume:
+{resume_text}
+
+RESPOND WITH ONLY THIS JSON (no markdown, no introductions):
+
+{{
+  "overall_score": 75,
+  "strengths": ["Strong technical skills listed", "Clear work progression", "Quantified achievements"],
+  "weaknesses": ["Missing key industry keywords", "Weak summary section", "No leadership examples"],
+  "improvement_suggestions": ["Add specific metrics to achievements", "Include relevant certifications", "Strengthen action verbs"],
+  "keyword_optimization": ["Add: Machine Learning, Cloud Computing, Agile", "Remove: outdated technologies"],
+  "ats_score": 65,
+  "action_plan": ["Update skills section with trending technologies", "Add 2-3 quantified achievements", "Optimize for ATS with relevant keywords"]
+}}
+
+Requirements:
+- Score based on content quality, relevance, and ATS compatibility
+- 3-4 specific strengths and weaknesses
+- Actionable improvements (not generic advice)
+- Specific keywords to add/remove
+- 3-step action plan for immediate improvement"""
     
     def _create_job_matching_prompt(self, user_profile: UserProfile, preferences: Dict[str, Any]) -> str:
         """Create prompt for job matching."""
-        return f"""
-        Find job opportunities matching this profile:
-        
-        User Skills: {', '.join(user_profile.skills)}
-        Experience: {', '.join(user_profile.experience)}
-        Preferences: {json.dumps(preferences)}
-        
-        Provide 5-7 job matches including:
-        1. Job title and company type
-        2. Match percentage
-        3. Key requirements
-        4. Why it's a good fit
-        5. Estimated salary range
-        6. Remote/location options
-        
-        Format as JSON array.
-        """
+        return f"""FIND MATCHING JOBS NOW. No explanations first.
+
+Profile:
+Skills: {', '.join(user_profile.skills)}
+Experience: {', '.join(user_profile.experience)}
+Preferences: {json.dumps(preferences)}
+
+RESPOND WITH ONLY THIS JSON ARRAY (no markdown, no text):
+
+[
+  {{
+    "job_title": "Machine Learning Engineer",
+    "company_type": "Tech Startup",
+    "match_percentage": 85,
+    "key_requirements": ["3+ years ML experience", "Python/TensorFlow", "Cloud platforms"],
+    "why_its_a_good_fit": "Your ML and Python skills directly match. Startup environment suits your growth goals.",
+    "estimated_salary_range": "$110,000 - $125,000",
+    "remote_location_options": "Remote available, SF office optional",
+    "application_priority": "High - apply within 48 hours"
+  }}
+]
+
+Requirements:
+- 5-7 specific job opportunities
+- Match %: 60-90% based on skill alignment
+- Realistic requirements for user's experience
+- Direct fit explanation (1-2 sentences)
+- Accurate salary ranges for location/experience
+- Clear remote/location info
+- Application urgency level (High/Medium/Low)"""
     
     async def _generate_interview_questions(self, role: str) -> List[str]:
         """Generate interview questions for a specific role."""
@@ -558,8 +588,28 @@ class CareerAgent:
     def _parse_job_matches(self, llm_response: str) -> List[Dict[str, Any]]:
         """Parse LLM response into job matches."""
         try:
+            # First try direct JSON parsing
             return json.loads(llm_response)
         except json.JSONDecodeError:
+            # Try to extract JSON from markdown code blocks
+            import re
+            json_pattern = r'```(?:json)?\s*(\[.*?\])\s*```'
+            match = re.search(json_pattern, llm_response, re.DOTALL)
+            if match:
+                try:
+                    return json.loads(match.group(1))
+                except json.JSONDecodeError:
+                    pass
+            
+            # Try to find any JSON array in the response
+            json_pattern = r'(\[.*?\])'
+            match = re.search(json_pattern, llm_response, re.DOTALL)
+            if match:
+                try:
+                    return json.loads(match.group(1))
+                except json.JSONDecodeError:
+                    pass
+            
             self.logger.warning("Failed to parse job matches, returning empty list")
             return []
     
@@ -740,27 +790,47 @@ class CareerAgent:
         return demo_responses.get(analysis_type, '{"message": "Demo response not available for this analysis type"}')
     
     def _create_fallback_recommendations(self, user_profile: UserProfile) -> List[CareerRecommendation]:
-        """Create fallback recommendations when LLM parsing fails."""
-        # Simple matching based on skills
+        """Create detailed fallback recommendations when LLM parsing fails."""
         recommendations = []
         
         for industry, data in self.industry_data.items():
             skill_matches = set(user_profile.skills).intersection(set(data["skills"]))
             if skill_matches:
-                match_percentage = (len(skill_matches) / len(data["skills"])) * 100
+                # Calculate match percentage based on skill overlap
+                match_percentage = min(95, max(60, int((len(skill_matches) / len(data["skills"])) * 100)))
+                
+                # Generate skill gaps
+                skill_gaps = list(set(data["skills"]) - set(user_profile.skills))
+                
+                # Create career progression path
+                base_role = data["roles"][0]
+                career_path = [
+                    f"Junior {base_role}",
+                    base_role,
+                    f"Senior {base_role}",
+                    f"Lead {base_role}"
+                ]
+                
+                # Create detailed reasoning
+                reasoning = f"Strong {match_percentage}% match! Your skills in {', '.join(list(skill_matches)[:3])} align well with {industry} roles. "
+                if skill_gaps:
+                    reasoning += f"To reach senior levels, consider developing {', '.join(skill_gaps[:2])}. "
+                reasoning += f"This field offers excellent growth potential with salary progression from {data['avg_salaries']['entry']} to {data['avg_salaries']['senior']}."
                 
                 rec = CareerRecommendation(
-                    job_title=data["roles"][0],  # Use first role as example
+                    job_title=base_role,
                     match_percentage=match_percentage,
                     required_skills=data["skills"],
-                    skill_gaps=list(set(data["skills"]) - set(user_profile.skills)),
+                    skill_gaps=skill_gaps,
                     salary_range=data["avg_salaries"]["mid"],
-                    career_path=[f"Junior {data['roles'][0]}", data["roles"][0], f"Senior {data['roles'][0]}"],
-                    reasoning=f"Good match based on {len(skill_matches)} matching skills in {industry}"
+                    career_path=career_path,
+                    reasoning=reasoning
                 )
                 recommendations.append(rec)
         
-        return recommendations[:3]  # Return top 3
+        # Sort by match percentage and return top 3
+        recommendations.sort(key=lambda x: x.match_percentage, reverse=True)
+        return recommendations[:3]
 
 
 # CLI interface for testing

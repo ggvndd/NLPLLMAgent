@@ -160,24 +160,280 @@ class CareerCoachBot(commands.Bot):
     async def _generate_contextual_response(self, message: discord.Message, context: Dict[str, Any]) -> Union[str, discord.Embed]:
         """Generate a contextual response based on the conversation history."""
         try:
-            # Get response from career agent
+            # Detect intent first
+            intent, confidence = self.conversation_handler.detect_intent(message.content)
+            
+            self.logger.info(f"Intent: {intent}, Confidence: {confidence:.2f}")
+            
+            # Handle specific career intents with medium to high confidence using structured responses
+            if intent == 'career_analysis' and confidence > 0.2:
+                return await self._handle_career_analysis_request(message, context)
+            
+            if intent == 'job_match' and confidence > 0.4:
+                return await self._handle_job_matching_request(message, context)
+            
+            # For casual chat, personal check-ins, or low-confidence career topics, use natural conversation
+            if intent in ['casual_chat', 'personal_check', 'greeting'] or confidence < 0.5:
+                # Extract any skills mentioned for context
+                skills = self.conversation_handler.extract_skills(message.content)
+                if skills:
+                    # Update context with skills
+                    context['skills'] = context.get('skills', []) + skills
+                
+                # Use general chat for natural conversation
+                response = await self.career_agent.generate_chat_response(
+                    message.content,
+                    context
+                )
+                
+                # Return as plain text for more natural conversation flow
+                return response
+            
+            # For other specific intents (resume review, etc.) with decent confidence
+            if confidence > 0.3:
+                response = await self.career_agent.generate_chat_response(
+                    message.content,
+                    context
+                )
+                return self._format_conversation_response(response)
+            
+            # Default to natural conversation for unclear intents
             response = await self.career_agent.generate_chat_response(
                 message.content,
                 context
             )
-            
-            # Extract any skills mentioned
-            skills = self.conversation_handler.extract_skills(message.content)
-            if skills:
-                # Update context with skills
-                context['skills'] = context.get('skills', []) + skills
-            
-            # Format the response appropriately
-            return self._format_conversation_response(response)
+            return response
             
         except Exception as e:
             self.logger.error(f"Error generating response: {e}")
             return "I apologize, but I'm having trouble right now. Could you try rephrasing your question?"
+    
+    async def _handle_career_analysis_request(self, message: discord.Message, context: Dict[str, Any]) -> discord.Embed:
+        """Handle career analysis requests with structured output."""
+        try:
+            # Extract profile information from message and context
+            skills = self.conversation_handler.extract_skills(message.content)
+            experience = self.conversation_handler.extract_experience(message.content)
+            interests = self.conversation_handler.extract_interests(message.content)
+            education = self.conversation_handler.extract_education(message.content)
+            
+            # Add skills from context if available
+            if 'skills' in context:
+                skills.extend(context['skills'])
+                skills = list(set(skills))  # Remove duplicates
+            
+            # Create user profile
+            user_profile = UserProfile(
+                skills=skills or ["General skills"],
+                experience=experience or ["Entry level"],
+                interests=interests or ["Professional growth"],
+                education=education or ["Bachelor's degree"]
+            )
+            
+            # Get structured career analysis
+            recommendations = await self.career_agent.analyze_career_path(user_profile)
+            
+            if not recommendations:
+                return discord.Embed(
+                    title="🤔 Need More Information",
+                    description="I'd love to help with career advice! Could you share more details about your skills, experience, or interests?",
+                    color=0xffa500
+                )
+            
+            # Create structured embed response
+            embed = discord.Embed(
+                title="🎯 Career Path Analysis",
+                description=f"Based on your profile, here are {len(recommendations)} personalized career recommendations:",
+                color=0x00ff00
+            )
+            
+            for i, rec in enumerate(recommendations, 1):
+                # Format each recommendation with Discord limits
+                field_value = f"**Match: {rec.match_percentage}%** | **Salary:** {rec.salary_range}\n"
+                
+                if rec.skill_gaps:
+                    gaps = ', '.join(rec.skill_gaps[:2])  # Limit to 2 skills
+                    field_value += f"**Skills to learn:** {gaps}\n"
+                
+                if rec.career_path and len(rec.career_path) >= 3:
+                    path = f"{rec.career_path[0]} → {rec.career_path[-1]}"
+                    field_value += f"**Path:** {path}\n"
+                
+                # Truncate reasoning to fit Discord limits (max 1024 chars per field)
+                reasoning = rec.reasoning[:400] + "..." if len(rec.reasoning) > 400 else rec.reasoning
+                field_value += f"\n{reasoning}"
+                
+                # Ensure field value is under 1024 characters
+                if len(field_value) > 1020:
+                    field_value = field_value[:1020] + "..."
+                
+                # Ensure field name is under 256 characters
+                field_name = f"{i}. {rec.job_title}"
+                if len(field_name) > 250:
+                    field_name = f"{i}. {rec.job_title[:240]}..."
+                
+                embed.add_field(
+                    name=field_name,
+                    value=field_value,
+                    inline=False
+                )
+            
+            embed.set_footer(text="💡 Ask follow-up questions about any of these recommendations!")
+            return embed
+            
+        except Exception as e:
+            self.logger.error(f"Error in career analysis request: {e}")
+            return discord.Embed(
+                title="❌ Analysis Error",
+                description="I encountered an issue analyzing your career path. Please try again with more specific information about your skills and experience.",
+                color=0xff0000
+            )
+    
+    async def _handle_job_matching_request(self, message: discord.Message, context: Dict[str, Any]) -> discord.Embed:
+        """Handle job matching requests with structured output."""
+        try:
+            # Extract profile information from message and context
+            skills = self.conversation_handler.extract_skills(message.content)
+            experience = self.conversation_handler.extract_experience(message.content)
+            interests = self.conversation_handler.extract_interests(message.content)
+            education = self.conversation_handler.extract_education(message.content)
+            
+            # Add skills from context if available
+            if 'skills' in context:
+                skills.extend(context['skills'])
+                skills = list(set(skills))  # Remove duplicates
+            
+            # Extract job preferences from message
+            job_preferences = self._extract_job_preferences(message.content)
+            
+            # Create user profile
+            user_profile = UserProfile(
+                skills=skills or ["General skills"],
+                experience=experience or ["Entry level"],
+                interests=interests or ["Professional growth"],
+                education=education or ["Bachelor's degree"]
+            )
+            
+            # Get job matches
+            matches = await self.career_agent.match_jobs(user_profile, job_preferences)
+            
+            if not matches:
+                return discord.Embed(
+                    title="🤔 Need More Information",
+                    description="I'd love to help find job matches! Could you share more details about your preferred role, location, or salary expectations?",
+                    color=0xffa500
+                )
+            
+            # Create structured embed response
+            embed = discord.Embed(
+                title="🎯 Job Matching Results",
+                description=f"Based on your preferences, here are {len(matches)} job opportunities:",
+                color=0x00ff00
+            )
+            
+            for i, match in enumerate(matches, 1):
+                # Format each job match with Discord limits
+                field_value = f"**Match: {match.get('match_percentage', 85)}%** | **Salary:** {match.get('salary_range', 'Competitive')}\n"
+                field_value += f"**Company:** {match.get('company_type', 'Tech Company')}\n"
+                
+                if match.get('location'):
+                    field_value += f"**Location:** {match.get('location', 'Various')}\n"
+                
+                if match.get('remote_ok'):
+                    field_value += "**Remote:** Available\n"
+                
+                # Add why it's a good fit
+                reasoning = match.get('why_good_fit', 'Good match for your skills and experience')
+                if len(reasoning) > 300:
+                    reasoning = reasoning[:300] + "..."
+                field_value += f"\n{reasoning}"
+                
+                # Ensure field value is under 1024 characters
+                if len(field_value) > 1020:
+                    field_value = field_value[:1020] + "..."
+                
+                # Ensure field name is under 256 characters
+                field_name = f"{i}. {match.get('job_title', 'Position')}"
+                if len(field_name) > 250:
+                    field_name = f"{i}. {match.get('job_title', 'Position')[:240]}..."
+                
+                embed.add_field(
+                    name=field_name,
+                    value=field_value,
+                    inline=False
+                )
+            
+            embed.set_footer(text="💡 Ask follow-up questions about any of these opportunities!")
+            return embed
+            
+        except Exception as e:
+            self.logger.error(f"Error in job matching request: {e}")
+            return discord.Embed(
+                title="❌ Job Search Error",
+                description="I encountered an issue finding job matches. Please try again with more specific preferences (role, location, salary).",
+                color=0xff0000
+            )
+    
+    def _extract_job_preferences(self, message: str) -> Dict[str, Any]:
+        """Extract job preferences from natural language message."""
+        import re
+        
+        preferences = {
+            'roles': [],
+            'location': [],
+            'salary_range': '',
+            'remote_ok': False,
+            'industry': [],
+            'experience_level': 'Mid-level'
+        }
+        
+        # Extract roles
+        role_patterns = [
+            r'(?i)looking for\s+([\w\s]+?)\s+(?:job|position|role)',
+            r'(?i)(?:want|need|seeking)\s+([\w\s]+?)\s+(?:job|position|role)',
+            r'(?i)interested in\s+([\w\s,]+?)(?:\s+roles?|\s+positions?|\.)',
+            r'(?i)looking for.*opportunities.*in\s+([\w\s,]+?)(?:\.|,|$)',
+            r'(?i)(?:Data Science|Machine Learning|AI|Software|Python|Engineer|Developer|Analyst)'
+        ]
+        
+        for pattern in role_patterns:
+            matches = re.findall(pattern, message)
+            preferences['roles'].extend([match.strip() for match in matches])
+        
+        # Extract location
+        location_patterns = [
+            r'(?i)in\s+([\w\s,]+?)(?:\s+or|\s+with|\s*\.|\s*$)',
+            r'(?i)(?:at|near)\s+([\w\s,]+?)(?:\s+or|\s+with|\s*\.|\s*$)'
+        ]
+        
+        for pattern in location_patterns:
+            matches = re.findall(pattern, message)
+            preferences['location'].extend([match.strip() for match in matches])
+        
+        # Extract salary
+        salary_patterns = [
+            r'(?i)\$[\d,]+(?:\s*-\s*\$?[\d,]+)?(?:\s*k)?',
+            r'(?i)salary.*?\$[\d,]+(?:\s*-\s*\$?[\d,]+)?',
+            r'(?i)pay.*?\$[\d,]+(?:\s*-\s*\$?[\d,]+)?'
+        ]
+        
+        for pattern in salary_patterns:
+            match = re.search(pattern, message)
+            if match:
+                preferences['salary_range'] = match.group(0)
+                break
+        
+        # Check for remote
+        if re.search(r'(?i)remote', message):
+            preferences['remote_ok'] = True
+        
+        # Extract experience level
+        if re.search(r'(?i)entry.level|new.grad|recent.grad', message):
+            preferences['experience_level'] = 'Entry-level'
+        elif re.search(r'(?i)senior|lead|principal', message):
+            preferences['experience_level'] = 'Senior'
+        
+        return preferences
     
     async def on_message(self, message):
         """Handle all messages sent in the server."""
@@ -237,12 +493,12 @@ class CareerCoachBot(commands.Bot):
                 elif isinstance(response, discord.Embed):
                     await message.channel.send(embed=response)
                 # If response is a list/tuple of embeds, send all
-                elif isinstance(response, (list, tuple)):
+                elif hasattr(response, '__iter__') and not isinstance(response, str):
                     for item in response:
                         if isinstance(item, discord.Embed):
                             await message.channel.send(embed=item)
                         else:
-                            await message.channel.send(item)
+                            await message.channel.send(str(item))
                 
         except Exception as e:
             self.logger.error(f"Error processing message: {e}")

@@ -1,5 +1,5 @@
 {
-  "saved_at": "2025-10-29T19:37:30.253548",
+  "saved_at": "2025-10-29T19:24:42.948380",
   "user_count": 3,
   "contexts": {
     "123456": {
@@ -213,22 +213,6 @@
         {
           "bot": "<discord.embeds.Embed object at 0x10643dca0>",
           "timestamp": "2025-10-29T19:20:58.559870"
-        },
-        {
-          "user": "hi man u good",
-          "timestamp": "2025-10-29T12:34:54.444000+00:00"
-        },
-        {
-          "bot": "It's good to see you're feeling chipper today! How was your morning? Anything exciting happen? Or are we diving straight back into the world of coding and job hunting? I'm here for either, btw!",
-          "timestamp": "2025-10-29T19:35:07.889765"
-        },
-        {
-          "user": "yeah! tell me what i can do about my skills in data engineering",
-          "timestamp": "2025-10-29T12:35:53.930000+00:00"
-        },
-        {
-          "bot": "<discord.embeds.Embed object at 0x106061f70>",
-          "timestamp": "2025-10-29T19:36:20.735560"
         }
       ],
       "skills": [

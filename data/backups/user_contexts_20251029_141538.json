@@ -1,0 +1,145 @@
+{
+  "saved_at": "2025-10-29T13:51:00.445068",
+  "user_count": 3,
+  "contexts": {
+    "123456": {
+      "state": "engaged",
+      "conversation_history": [
+        {
+          "user": "Hi!",
+          "timestamp": "2025-10-28T10:00:00"
+        },
+        {
+          "bot": "Hello! How can I help?",
+          "timestamp": "2025-10-28T10:00:01"
+        }
+      ],
+      "skills": [
+        "Python",
+        "SQL"
+      ]
+    },
+    "610390236052062208": {
+      "state": "initial",
+      "conversation_history": [
+        {
+          "user": "hi there!",
+          "timestamp": "2025-10-28T16:49:54.516000+00:00"
+        },
+        {
+          "bot": "Ha! You're back with another \"hi there\" already! I love it! How was your day so far? Anything exciting happen or are you just taking a break from the daily grind? By the way, do you want to talk about something specific or just chat casually for a bit?",
+          "timestamp": "2025-10-28T23:50:14.469595"
+        },
+        {
+          "user": "Can you help me with my career?",
+          "timestamp": "2025-10-28T16:50:25.491000+00:00"
+        },
+        {
+          "bot": "<discord.embeds.Embed object at 0x104bcbdc0>",
+          "timestamp": "2025-10-28T23:50:53.180447"
+        },
+        {
+          "user": "yup, I want to become a UI/UX designer, but right now i struggled with a lot of creativity blocks",
+          "timestamp": "2025-10-28T16:51:17.656000+00:00"
+        },
+        {
+          "bot": "<discord.embeds.Embed object at 0x104bcbee0>",
+          "timestamp": "2025-10-28T23:51:29.661013"
+        },
+        {
+          "user": "/career_analysis\nSkills: Python, SQL, Machine Learning, Data Visualization, Statistical Analysis\nExperience: 2 years as Data Analyst at tech startup, 1 year internship at finance company\nInterests: Artificial Intelligence, Data Science, Automation, Problem Solving\nEducation: Bachelor's in Computer Science, Online courses in AI/ML",
+          "timestamp": "2025-10-29T06:18:36.781000+00:00"
+        },
+        {
+          "bot": "<discord.embeds.Embed object at 0x1073cf310>",
+          "timestamp": "2025-10-29T13:19:15.281639"
+        },
+        {
+          "user": "/career_analysis Skills: Python, SQL, Machine Learning, Data Visualization, Statistical Analysis\nExperience: 2 years as Data Analyst at tech startup, 1 year internship at finance company\nInterests: Artificial Intelligence, Data Science, Automation, Problem Solving\nEducation: Bachelor's in Computer Science, Online courses in AI/ML",
+          "timestamp": "2025-10-29T06:20:38.183000+00:00"
+        },
+        {
+          "bot": "<discord.embeds.Embed object at 0x1073cf430>",
+          "timestamp": "2025-10-29T13:21:06.331166"
+        },
+        {
+          "user": "Hi! I'm a computer science student graduating next year. I love coding in Python and have done some machine learning projects. What career paths would be good for me?",
+          "timestamp": "2025-10-29T06:22:48.693000+00:00"
+        },
+        {
+          "bot": "<discord.embeds.Embed object at 0x1073cf550>",
+          "timestamp": "2025-10-29T13:23:08.575259"
+        },
+        {
+          "user": "/career_analysis Skills: Python, SQL, Machine Learning, Data Visualization, Statistical Analysis\nExperience: 2 years as Data Analyst at tech startup, 1 year internship at finance company\nInterests: Artificial Intelligence, Data Science, Automation, Problem Solving\nEducation: Bachelor's in Computer Science, Online courses in AI/ML",
+          "timestamp": "2025-10-29T06:24:17.286000+00:00"
+        },
+        {
+          "bot": "<discord.embeds.Embed object at 0x1073cf670>",
+          "timestamp": "2025-10-29T13:24:38.208098"
+        },
+        {
+          "user": "what was the job recommendation that you gave me just now?",
+          "timestamp": "2025-10-29T06:38:32.758000+00:00"
+        },
+        {
+          "bot": "<discord.embeds.Embed object at 0x1073cf940>",
+          "timestamp": "2025-10-29T13:38:49.576600"
+        },
+        {
+          "user": "oh i havent told you yet, yeah that's right, i just graduated and planning to stay in the tech industry, any ideas?",
+          "timestamp": "2025-10-29T06:40:03.662000+00:00"
+        },
+        {
+          "bot": "<discord.embeds.Embed object at 0x1073cfd30>",
+          "timestamp": "2025-10-29T13:40:27.088123"
+        },
+        {
+          "user": "3 is interesting, and yeah i could see myself that involves both automation and problem solving",
+          "timestamp": "2025-10-29T06:44:01.404000+00:00"
+        },
+        {
+          "bot": "<discord.embeds.Embed object at 0x1073cfdc0>",
+          "timestamp": "2025-10-29T13:44:26.223018"
+        }
+      ]
+    },
+    "593635660674498562": {
+      "state": "initial",
+      "conversation_history": [
+        {
+          "user": "hi careermate",
+          "timestamp": "2025-10-29T06:47:16.697000+00:00"
+        },
+        {
+          "bot": "Hey there! It's great to see you again, careermate! How was your week? Anything exciting happen or any new goals on the horizon that you're working towards? I feel like we left off in the middle of a conversation about... well, what were we discussing last time? Did you want to pick up where we left off with something career-related, or do you just need some general chat therapy today?",
+          "timestamp": "2025-10-29T13:47:30.280380"
+        },
+        {
+          "user": "can you explain me about NLP?",
+          "timestamp": "2025-10-29T06:47:33.020000+00:00"
+        },
+        {
+          "bot": "<discord.embeds.Embed object at 0x106a0e1f0>",
+          "timestamp": "2025-10-29T13:47:53.631919"
+        },
+        {
+          "user": "so you cant talk to me?",
+          "timestamp": "2025-10-29T06:49:32.734000+00:00"
+        },
+        {
+          "bot": "<discord.embeds.Embed object at 0x106a0e280>",
+          "timestamp": "2025-10-29T13:49:51.458909"
+        },
+        {
+          "user": "can you explain to me about urself?",
+          "timestamp": "2025-10-29T06:50:16.069000+00:00"
+        },
+        {
+          "bot": "<discord.embeds.Embed object at 0x106a0e5e0>",
+          "timestamp": "2025-10-29T13:50:38.211855"
+        }
+      ]
+    }
+  }
+}

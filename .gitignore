@@ -142,7 +142,9 @@ ehthumbs.db
 Thumbs.db
 
 # Application specific
-logs/*.log
 *.db
 temp/
 tmp/
+
+# Development tools and testing (not needed for production)
+dev/
