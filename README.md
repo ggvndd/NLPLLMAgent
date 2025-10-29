@@ -1,8 +1,8 @@
 # 🤖 CareerMate - AI Career Coach Discord Bot
 
 ## Done by 
-- Gavind Muhammad Pramahita 
-- Muhammad Zidane Septian Irsyadi
+- Gavind Muhammad Pramahita (22/497221/TK/54484)
+- Muhammad Zidane Septian Irsyadi (22/504678/TK/55212)
 
 An intelligent career coaching Discord bot that provides **natural, human-like conversations** for career guidance, job matching, and professional development using **100% FREE local Llama AI** - no external APIs needed!
 
