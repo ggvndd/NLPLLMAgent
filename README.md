@@ -7,8 +7,8 @@ An intelligent career coaching Discord bot that provides **natural, human-like c
 - Muhammad Zidane Septian Irsyadi
 
 ## Complimentary Stuffs
-- [Presentation]([url](https://www.canva.com/design/DAG3JjDJ3o8/WGsmamoKbAxq3tR8XqdY8Q/edit?utm_content=DAG3JjDJ3o8&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton))
-- [Explanation Video]([url](https://drive.google.com/file/d/19EPuc5RjYndICZgu9qKEhSSRtGWOFRxB/view?usp=sharing))
+- [Presentation](https://www.canva.com/design/DAG3JjDJ3o8/WGsmamoKbAxq3tR8XqdY8Q/edit?utm_content=DAG3JjDJ3o8&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
+- [Explanation Video](https://drive.google.com/file/d/19EPuc5RjYndICZgu9qKEhSSRtGWOFRxB/view?usp=sharing)
 
 **✅ Complete Feature Set:**
 - 💬 **Human-like Discord Chat** - Natural conversation with smart career advice
